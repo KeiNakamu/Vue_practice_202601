@@ -5,9 +5,19 @@
   const input = ref('');
   const inputDate = ref('');
 
+  const isErrMsg = ref(false);
+
+  const emit = defineEmits(['created']);
+
   const onSubmitForm = () => {
     console.log(input.value);
     console.log(inputDate.value);
+
+    if(input.value == "" || inputDate.value == "") {
+      isErrMsg.value = true;
+      event.preventDefault();
+      return;
+    }
 
     const items = JSON.parse(localStorage.getItem("items")) || [];
 
@@ -23,12 +33,17 @@
 
     localStorage.setItem("items", JSON.stringify(items));
 
+    emit("created");
+    input.value = '';
+    inputDate.value = '';
+    isErrMsg.value = false;
   }
 </script>
 
 <template>
   <div>
-    <form @submit.prevent="onSubmitForm">
+    <p v-if="isErrMsg">タスク・期限を両方入力してください。</p>
+    <form @submit="onSubmitForm">
       <label>やること<input type="text" v-model="input" /></label>
       <br/>
       <label>期限<input type="date" v-model="inputDate" /></label>
