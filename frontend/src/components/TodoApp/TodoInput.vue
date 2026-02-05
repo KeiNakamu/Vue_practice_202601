@@ -42,7 +42,7 @@
 
 <template>
   <div>
-    <p v-if="isErrMsg">タスク・期限を両方入力してください。</p>
+    <p v-if="isErrMsg">タスク・期限を両方入力してください</p>
     <form @submit="onSubmitForm">
       <label>やること<input type="text" v-model="input" style="margin: 20px;"/></label>
       <label>期限<input type="date" v-model="inputDate" style="margin: 20px;" /></label>
