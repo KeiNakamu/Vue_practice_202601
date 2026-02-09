@@ -19,14 +19,14 @@
     },
   });
 
-  const emit = defineEmits(['toggle-edit', 'update', 'delete', 'sort-by-limit', 'sort-by-id']);
+  const emit = defineEmits(['toggle-edit', 'update', 'delete', 'sort-by-limit_date', 'sort-by-id']);
 
   let editContent = ref();
   let editLimit = ref();
   let editState = ref();
+  let editingId = ref(null);
 
   let isErrMsg = ref(false);
-  let isOnEditOther = ref(false);
   let errMsg = ref('');
 
   let deleteItemId = ref('');
@@ -37,24 +37,27 @@
 
   // タスクを編集要求
   const onEdit = (item) => {
+    console.log(item.state, typeof item.state);
 
-    isOnEditOther.value = props.items.some(
-      (i) => i.onEdit && i.id !== item.id
-    );
-
-    if(isOnEditOther.value) {
+    if(editingId.value && editingId.value !== item.id){
       errMsg.value = "他に編集中のタスクがあります";
       isErrMsg.value = true;
       return;
-    }else{
+    } else {
       isErrMsg.value = false;
     }
-    emit('toggle-edit', item.id);
 
-    editContent.value = item.content;
-    editLimit.value = item.limit;
-    editState.value = item.state;
+    if(editingId.value === item.id) {
+      editingId.value = null; // キャンセル
+    }else{
+      editingId.value = item.id;
+      editContent.value = item.content;
+      editLimit.value = item.limit_date;
+      editState.value = item.state;
+    }
   }
+
+  console.log(statuses);
 
   // タスクを更新要求
   const onUpdate = (id) => {
@@ -68,10 +71,12 @@
     }
     emit('update', {
       id,
-      content: editContent,
-      limit: editLimit,
-      state: editState,
+      content: editContent.value,
+      limit_date: editLimit.value,
+      state: editState.value,
     });
+
+    editingId.value = null;
   }
 
   // 削除ボタン押下後、モーダル表示
@@ -96,7 +101,7 @@
 
   // 期限を基準にソート
   const sortByLimit = () => {
-    emit('sort-by-limit');
+    emit('sort-by-limit_date');
   }
 
   // IDを基準にソート
@@ -113,36 +118,36 @@
         <tr>
           <th class="th-index"><input type="button" @click="sortById()" :value=" props.isIdAsc ? '▲' : '▼'"/></th>
           <th class="th-value">やること</th>
-          <th class="th-limit">期限<input type="button" @click="sortByLimit()" :value=" props.isLimitAsc ? '▲' : '▼' "/></th>
+          <th class="th-limit_date">期限<input type="button" @click="sortByLimit()" :value=" props.isLimitAsc ? '▲' : '▼' "/></th>
           <th class="th-state">状態</th>
           <th class="th-edit">編集</th>
           <th class="th-delete">削除</th>
         </tr>
-        <tr v-for="(item, index) in props.items" :key="item.id" :class="{ red: new Date(item.limit) < today }">
+        <tr v-for="(item, index) in props.items" :key="item.id" :class="{ red: new Date(item.limit_date) < today }">
           <td>{{ index + 1 }}</td>
           <td>
-            <span v-if="!item.onEdit">{{ item.content }}</span>
+            <span v-if="editingId !== item.id">{{ item.content }}</span>
             <input v-else v-model="editContent" type="text"/>
           </td>
           <td>
-            <span v-if="!item.onEdit">{{ item.limit }}</span>
+            <span v-if="editingId !== item.id">{{ item.limit_date }}</span>
             <input v-else v-model="editLimit" type="date">
           </td>
           <td>
-            <span v-if="!item.onEdit">{{ item.state.value }}</span>
-            <select v-else v-model="item.state.value">
+            <span v-if="editingId !== item.id">{{ item.state }}</span>
+            <select v-else v-model="editState">
               <option
                 v-for="state in statuses"
                 :key="state.id"
-                :value="state.value" 
+                :value="state.value"
               >
                 {{ state.value }}
               </option>
             </select>
           </td>
           <td>
-            <input @click="onEdit(item)" type="button" :value="item.onEdit ? 'キャンセル' : '編集' "/>
-            <input v-if="item.onEdit" @click="onUpdate(item.id)" type="button" value="更新"/>
+            <input @click="onEdit(item)" type="button" :value="editingId === item.id ? 'キャンセル' : '編集' "/>
+            <input v-if="editingId === item.id" @click="onUpdate(item.id)" type="button" value="更新"/>
           </td>
           <td><input @click="showDeleteModal(item.id)" type="button" value="削除"/></td>
         </tr>
