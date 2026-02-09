@@ -3,36 +3,49 @@
   import TodoInput from '../components/TodoApp/TodoInput.vue';
   import TodoListView from '../components/TodoApp/TodoListView.vue';
 
+  import { getTodos, createTodo, updateTodo, deleteTodo } from '@/services/todoService.js';
+
   const items = ref([]);
 
-  // 再描画
-  const loadItems = () => {
-    items.value = JSON.parse(localStorage.getItem("items")) || [];
+  // データ取得
+  const loadItems = async () => {
+    const res = await getTodos();
+    items.value = res.todos;
+    console.log('res.data: ', res.todos);
+  };
+
+  // 新規作成
+  const handleCreate = async (todo) => {
+    await createTodo(todo);
+    await loadItems();
+  }
+
+  // 更新
+  const handleUpdate = async (data) => {
+    console.log(data);
+
+    await updateTodo(data.id, {
+      content: data.content,
+      limit_date: data.limit_date,
+      state: data.state,
+    });
+    await loadItems();
+  }
+
+  // 削除
+  const handleDelete = async (id) => {
+    try {
+      await deleteTodo(id);
+      await loadItems();
+      alert('削除しました');
+
+    } catch (err) {
+      console.log(err);
+      alert('削除に失敗しました');
+    }
   }
 
   onMounted(loadItems);
-
-  const toggleEdit = (id) => {
-    items.value = items.value.map(item => item.id === id ? { ...item, onEdit: !item.onEdit } : item);
-  };
-
-  const onUpdate = (payload) => {
-    const index = items.value.findIndex(i => i.id === payload.id);
-
-    items.value[index] = {
-      ...items.value[index],
-      content: payload.content,
-      limit: payload.limit,
-      state: payload.state,
-      onEdit: false,
-    };
-
-    localStorage.setItem("items", JSON.stringify(items.value));
-  }
-
-  const onDeleteItem = (id) => {
-    items.value.splice(id, 1);
-  }
 
   // ソート機能
   const isLimitAsc = ref(true);
@@ -41,7 +54,7 @@
   const sortByLimit = () => {
     console.log('期限を基準にソート');
     items.value.sort((a, b) => {
-      const diff = new Date(a.limit) - new Date(b.limit);
+      const diff = new Date(a.limit_date) - new Date(b.limit_date);
       return isLimitAsc.value ? diff : -diff;
     });
 
@@ -64,13 +77,13 @@
 
 <template>
   <div class="todoApp">
-    <TodoInput @created="loadItems"></TodoInput>
+    <TodoInput @created="handleCreate"></TodoInput>
     <TodoListView
       :items="items"
-      @toggle-edit="toggleEdit"
-      @update="onUpdate"
-      @delete="onDeleteItem"
-      @sort-by-limit="sortByLimit"
+      @toggle-edit="loadItems"
+      @update="handleUpdate"
+      @delete="handleDelete"
+      @sort-by-limit_date="sortByLimit"
       :isLimitAsc="isLimitAsc"
       @sort-by-id="sortById"
       :isIdAsc="isIdAsc"
