@@ -2,34 +2,55 @@
   import { onMounted, ref } from 'vue';
   import TodoInput from '../components/TodoApp/TodoInput.vue';
   import TodoListView from '../components/TodoApp/TodoListView.vue';
+  import ShowModal from '../components/Modal/ShowModal.vue';
+  import { useModal } from '@/composables/useModal';
 
   import { getTodos, createTodo, updateTodo, deleteTodo } from '@/services/todoService.js';
+
+  const { modal, showModal, hideModal } = useModal();
 
   const items = ref([]);
 
   // データ取得
   const loadItems = async () => {
-    const res = await getTodos();
-    items.value = res.todos;
-    console.log('res.data: ', res.todos);
+    try {
+      const res = await getTodos();
+      items.value = res.todos;
+      console.log('res.data: ', res.todos);
+    } catch (err) {
+      console.log('loadItems err: ', err);
+      showModal('error', 'データの取得に失敗しました');
+    }
   };
 
   // 新規作成
   const handleCreate = async (todo) => {
-    await createTodo(todo);
-    await loadItems();
+    try{
+      await createTodo(todo);
+      await loadItems();
+      showModal('success', '登録しました');
+    }catch (err){
+      console.log('handleCreate err: ', err);
+      showModal('error', '登録に失敗しました');
+    }
   }
 
   // 更新
   const handleUpdate = async (data) => {
-    console.log(data);
+    // console.log(data);
 
-    await updateTodo(data.id, {
-      content: data.content,
-      limit_date: data.limit_date,
-      state: data.state,
-    });
-    await loadItems();
+    try {
+      await updateTodo(data.id, {
+        content: data.content,
+        limit_date: data.limit_date,
+        state: data.state,
+      });
+      await loadItems();
+      showModal('success', '更新しました');
+    } catch (err) {
+      console.log('handleUpdate err: ', err);
+      showModal('error', '更新に失敗しました');
+    }
   }
 
   // 削除
@@ -37,11 +58,11 @@
     try {
       await deleteTodo(id);
       await loadItems();
-      alert('削除しました');
+      showModal('success', '削除しました');
 
     } catch (err) {
-      console.log(err);
-      alert('削除に失敗しました');
+      console.log('handleDelete err: ', err);
+      showModal('error', '削除に失敗しました');
     }
   }
 
@@ -89,5 +110,11 @@
       :isIdAsc="isIdAsc"
       >
     </TodoListView>
+    <ShowModal 
+      v-if="modal.visible"
+      :statusFlg="modal.statusFlg"
+      :message="modal.message"
+      @close="hideModal"
+    />
   </div>
 </template>
