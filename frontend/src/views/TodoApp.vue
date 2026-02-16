@@ -3,13 +3,32 @@
   import TodoInput from '../components/TodoApp/TodoInput.vue';
   import TodoListView from '../components/TodoApp/TodoListView.vue';
   import ShowModal from '../components/Modal/ShowModal.vue';
-  import { useModal } from '@/composables/useModal';
+  // import { useModal } from '@/composables/useModal';
+  // import { useConfirm } from '@/composables/useConfirm';
+  import { useDialog } from '@/composables/useDialog';
 
   import { getTodos, createTodo, updateTodo, deleteTodo } from '@/services/todoService.js';
 
-  const { modal, showModal, hideModal } = useModal();
+  // const { modal, showModal, hideModal } = useModal();
 
   const items = ref([]);
+
+  // const {
+  //   visible: confirmVisible,
+  //   message: confirmMessage,
+  //   confirm,
+  //   onConfirm,
+  //   onCancel
+  // } = useConfirm();
+
+  const {
+    dialog,
+    alert,
+    confirm,
+    close,
+    confirmOk,
+    confirmCancel
+  } = useDialog();
 
   // データ取得
   const loadItems = async () => {
@@ -18,20 +37,21 @@
       items.value = res.todos;
       console.log('res.data: ', res.todos);
     } catch (err) {
-      console.log('loadItems err: ', err);
-      showModal('error', 'データの取得に失敗しました');
+      console.log('loadItems err: ', err.response.data);
+      alert('error', err.response?.data?.message ?? 'エラーが発生しました');
     }
   };
 
   // 新規作成
   const handleCreate = async (todo) => {
     try{
-      await createTodo(todo);
+      const res = await createTodo(todo);
       await loadItems();
-      showModal('success', '登録しました');
+      console.log('handleCreate res: ', res);
+      alert('success', res.data.message);
     }catch (err){
       console.log('handleCreate err: ', err);
-      showModal('error', '登録に失敗しました');
+      alert('error', err.response?.data?.message ?? 'エラーが発生しました');
     }
   }
 
@@ -46,23 +66,27 @@
         state: data.state,
       });
       await loadItems();
-      showModal('success', '更新しました');
+      alert('success', '更新しました');
     } catch (err) {
       console.log('handleUpdate err: ', err);
-      showModal('error', '更新に失敗しました');
+      alert('error', err.response?.data?.message ?? 'エラーが発生しました');
     }
   }
 
   // 削除
-  const handleDelete = async (id) => {
+  const handleDelete = async (data) => {
+    const ok = await confirm(`${data.content}を削除してもよろしいですか？`);
+
+    if(!ok) return;
+
     try {
-      await deleteTodo(id);
+      await deleteTodo(data.id);
       await loadItems();
-      showModal('success', '削除しました');
+      alert('success', '削除しました');
 
     } catch (err) {
       console.log('handleDelete err: ', err);
-      showModal('error', '削除に失敗しました');
+      alert('error', err.response?.data?.message ?? 'エラーが発生しました');
     }
   }
 
@@ -94,11 +118,20 @@
     isIdAsc.value = !isIdAsc.value;
     localStorage.setItem("items", JSON.stringify(items.value));
   }
+
+  // 入力チェック
+  const formCheck = (data) => {
+    alert(data.form_check, data.message);
+  }
 </script>
 
 <template>
   <div class="todoApp">
-    <TodoInput @created="handleCreate"></TodoInput>
+    <TodoInput
+      @created="handleCreate"
+      @form-check="formCheck"
+    >
+    </TodoInput>
     <TodoListView
       :items="items"
       @toggle-edit="loadItems"
@@ -108,13 +141,32 @@
       :isLimitAsc="isLimitAsc"
       @sort-by-id="sortById"
       :isIdAsc="isIdAsc"
-      >
+      @form-check="formCheck"
+    >
     </TodoListView>
-    <ShowModal 
+    <!-- <ShowModal 
       v-if="modal.visible"
       :statusFlg="modal.statusFlg"
       :message="modal.message"
+      :isConfirm="modal.isConfirm"
       @close="hideModal"
+    />
+    <ShowModal 
+      v-if="confirmVisible"
+      statusFlg="error"
+      :message="confirmMessage"
+      :isConfirm="true"
+      @close="onCancel"
+      @delete="onConfirm"
+    /> -->
+    <ShowModal
+      v-if="dialog.visible"
+      :statusFlg="dialog.status"
+      :message="dialog.message"
+      :isConfirm="dialog.type === 'confirm'"
+      @close="close"
+      @delete="confirmOk"
+      @cancel="confirmCancel"
     />
   </div>
 </template>

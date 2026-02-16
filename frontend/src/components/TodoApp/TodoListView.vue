@@ -1,6 +1,7 @@
 <script setup>
   import { ref } from "vue"
   import { statuses } from "@/const/status"
+  import { message } from "@/const/message"
 
   const props = defineProps({
     // タスクリストを取得
@@ -19,32 +20,24 @@
     },
   });
 
-  const emit = defineEmits(['toggle-edit', 'update', 'delete', 'sort-by-limit_date', 'sort-by-id']);
+  const emit = defineEmits(['toggle-edit', 'update', 'delete', 'sort-by-limit_date', 'sort-by-id', 'form-check']);
 
   let editContent = ref();
   let editLimit = ref();
   let editState = ref();
   let editingId = ref(null);
 
-  let isErrMsg = ref(false);
-  let errMsg = ref('');
-
-  let deleteItemId = ref('');
-  let deleteItemContent = ref('');
-  let isShowModal = ref(false);
-
   const today = new Date();
 
   // タスクを編集要求
   const onEdit = (item) => {
-    console.log(item.state, typeof item.state);
 
     if(editingId.value && editingId.value !== item.id){
-      errMsg.value = "他に編集中のタスクがあります";
-      isErrMsg.value = true;
+      emit("form-check", {
+        form_check: 'error',
+        message: message.FRT_INF_01_002,
+      });
       return;
-    } else {
-      isErrMsg.value = false;
     }
 
     if(editingId.value === item.id) {
@@ -57,17 +50,15 @@
     }
   }
 
-  console.log(statuses);
-
   // タスクを更新要求
   const onUpdate = (id) => {
 
     if(editContent.value == '' || editLimit.value == '') {
-      errMsg.value = "タスク・期限を両方入力してください";
-      isErrMsg.value = true;
+      emit("form-check", {
+        form_check: 'error',
+        message: message.FRT_INF_01_001,
+      });
       return;
-    }else{
-      isErrMsg.value = false;
     }
     emit('update', {
       id,
@@ -79,24 +70,12 @@
     editingId.value = null;
   }
 
-  // 削除ボタン押下後、モーダル表示
-  const showDeleteModal = (id) => {
-    isShowModal.value = true;
-
-    deleteItemId.value = id;
-    const target = props.items.find(item => item.id === id);
-    deleteItemContent.value = target?.content ?? '';
-  }
-
-  // idのタスクを削除要求
-  const onDeleteItem = () => {
-    emit('delete', deleteItemId.value);
-    isShowModal.value = false;
-  }
-
-  // モーダルを閉じる
-  const onHideModal = () => {
-    isShowModal.value = false;
+  // タスクを削除要求
+  const onDeleteItem = (item) => {
+    emit('delete', {
+      id: item.id,
+      content: item.content
+    });
   }
 
   // 期限を基準にソート
@@ -113,7 +92,6 @@
 <template>
   <div>
     <div>
-      <p v-if="isErrMsg">{{ errMsg }}</p>
       <table>
         <tr>
           <th class="th-index"><input type="button" @click="sortById()" :value=" props.isIdAsc ? '▲' : '▼'"/></th>
@@ -149,41 +127,15 @@
             <input @click="onEdit(item)" type="button" :value="editingId === item.id ? 'キャンセル' : '編集' "/>
             <input v-if="editingId === item.id" @click="onUpdate(item.id)" type="button" value="更新"/>
           </td>
-          <td><input @click="showDeleteModal(item.id)" type="button" value="削除"/></td>
+          <td><input @click="onDeleteItem(item)" type="button" value="削除"/></td>
         </tr>
       </table>
     </div>
 
-    <div v-if="isShowModal" class="modal">
-      <div class="modal-content">
-        <p style="color: black; margin-bottom: 20px;">{{ deleteItemContent }}を削除してもよろしいですか？</p>
-        <input type="button" @click="onDeleteItem()" value="はい"/>
-        <input type="button" @click="onHideModal()" value="キャンセル"/>
-      </div>
-    </div>
   </div>
 </template>
 
 <style>
-/* モーダル関連 */
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-}
-
 .red {
   color: red;
 }
