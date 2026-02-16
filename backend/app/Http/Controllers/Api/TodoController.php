@@ -9,6 +9,9 @@ use Exception;
 use GrahamCampbell\ResultType\Success;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use App\Const\Message;
+use App\Http\Requests\TodoStoreRequest;
+use App\Http\Requests\TodoUpdateRequest;
 
 class TodoController extends Controller
 {
@@ -19,6 +22,7 @@ class TodoController extends Controller
     {
       try{
         Log::info('Todo画面　表示処理開始');
+        // throw new Exception();
         $todos = Todo::all();
 
         // Log::debug('取得データ：', $todos->toArray());
@@ -32,7 +36,7 @@ class TodoController extends Controller
 
         return response()->json([
           'status' => 'failed',
-          'message' => 'データの取得に失敗しました',
+          'message' => Message::ERR_00_002,
           'error' => $e->getMessage(),
         ], 500);
       }
@@ -41,16 +45,11 @@ class TodoController extends Controller
     /**
      * タスクの新規作成
      */
-    public function store(Request $request)
+    public function store(TodoStoreRequest $request)
     {
       try{
         Log::info('Todo画面　タスクの登録処理開始');
-        // Log::debug('request', $request->all());
-        $validated = $request->validate([
-          'content' => 'required|string|max:255',
-          'limit_date' => 'required|date',
-          'state' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $todo = Todo::create([
           ...$validated,
@@ -60,6 +59,7 @@ class TodoController extends Controller
         Log::info('Todo画面　タスクの登録処理終了');
         return response()->json([
           'status' => 'success',
+          'message' => Message::INF_01_001,
           'todo' => $todo,
         ], 201);
       }catch (\Throwable $e){
@@ -68,7 +68,7 @@ class TodoController extends Controller
 
         return response()->json([
           'status' => 'failed',
-          'message' => '登録に失敗しました',
+          'message' => Message::ERR_01_001,
           'error' => $e->getMessage(),
         ], 500);
       }
@@ -85,17 +85,13 @@ class TodoController extends Controller
     /**
      * タスクの更新
      */
-    public function update(Request $request, string $id)
+    public function update(TodoUpdateRequest $request, string $id)
     {
       try{
         Log::info('Todo画面　更新処理開始 id: ' . $id);
         // Log::debug('request', $request->all());
 
-        $validated = $request->validate([
-          'content' => 'required|string|max:255',
-          'limit_date' => 'required|date',
-          'state' => 'required|string',
-        ]);
+        $validated = $request->validated();
 
         $todo = Todo::findOrFail($id);
 
@@ -106,15 +102,24 @@ class TodoController extends Controller
 
         return response()->json([
           'status' => 'success',
-          'message' => '更新されました',
+          'message' => Message::INF_01_002,
         ]);
+      }catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+        Log::warning('Todo画面　更新対象が見つかりません', ['id' => $id]);
+
+        return response()->json([
+            'status' => 'failed',
+            'message' => Message::WAR_01_001,
+        ], 404);
+
       }catch (\Throwable $e){
         Log::error('Todo画面　更新処理に失敗しました');
         Log::error($e);
 
         return response()->json([
           'status' => 'failed',
-          'message' => '更新に失敗しました',
+          'message' => Message::ERR_01_002,
           'error' => $e->getMessage(),
         ], 500);
       }
@@ -135,7 +140,7 @@ class TodoController extends Controller
 
         return response()->json([
           'status' => 'success',
-          'message' => '削除しました',
+          'message' => Message::INF_01_003,
         ], 200);
       }catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
 
@@ -143,7 +148,7 @@ class TodoController extends Controller
 
         return response()->json([
             'status' => 'failed',
-            'message' => '削除対象が存在しません',
+            'message' => Message::WAR_01_002,
         ], 404);
 
       }catch (\Throwable $e){
@@ -152,7 +157,7 @@ class TodoController extends Controller
 
         return response()->json([
           'status' => 'failed',
-          'message' => '削除処理に失敗しました',
+          'message' => Message::ERR_01_003,
         ], 500);
       }
     }
