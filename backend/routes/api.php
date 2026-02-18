@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TodoController;
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 
 Route::get('/hello', function () {
@@ -15,6 +16,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         'user' => $request->user(),
     ]);
 });
+
+// 認証機能
+Route::post('/register', [AuthController::class, 'register']);
 
 // Todo画面
 Route::get('/todos', [TodoController::class, 'index']);
