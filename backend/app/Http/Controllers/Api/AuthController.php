@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\LoginRequest;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -26,5 +28,24 @@ class AuthController extends Controller
             'message' => 'User registered successfully',
             'user' => $user,
         ], 201);
+    }
+
+    public function login(LoginRequest $request)
+    {
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'message' => 'ログイン情報が正しくありません',
+            ], 401);
+        }
+
+        $user = Auth::user();
+
+        $token = $user->createToken('api-token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'ログイン成功',
+            'token' => $token,
+            'user' => $user,
+        ]);
     }
 }

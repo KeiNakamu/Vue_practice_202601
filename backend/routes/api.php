@@ -9,16 +9,12 @@ Route::get('/hello', function () {
   return ['message' => 'Hello from API'];
 });
 
-// 認証用テストルート
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return response()->json([
-        'message' => '認証成功',
-        'user' => $request->user(),
-    ]);
-});
-
 // 認証機能
+Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
+    return $request->user();
+});
 Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 // Todo画面
 Route::get('/todos', [TodoController::class, 'index']);
