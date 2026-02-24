@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Resources\LoginResponseResource;
 
 class AuthController extends Controller
 {
@@ -42,10 +43,9 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return response()->json([
-            'message' => 'ログイン成功',
+        return new LoginResponseResource((object) [
             'token' => $token,
             'user' => $user,
-        ]);
+        ]); 
     }
 }

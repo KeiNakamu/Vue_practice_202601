@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TodoController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\MeController;
 use Illuminate\Http\Request;
 
 Route::get('/hello', function () {
@@ -10,9 +11,7 @@ Route::get('/hello', function () {
 });
 
 // 認証機能
-Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
-    return $request->user();
-});
+Route::middleware('auth:sanctum')->get('/me', MeController::class);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
