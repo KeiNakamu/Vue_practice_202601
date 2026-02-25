@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\LoginResponseResource;
+use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
 {
@@ -25,10 +26,13 @@ class AuthController extends Controller
 
         Log::info('ユーザー作成成功', ['user_id' => $user->id]);
 
-        return response()->json([
-            'message' => 'User registered successfully',
+        // トークン発行
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return new LoginResponseResource([
+            'token' => $token,
             'user' => $user,
-        ], 201);
+        ]);
     }
 
     public function login(LoginRequest $request)

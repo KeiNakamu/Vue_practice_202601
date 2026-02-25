@@ -8,6 +8,17 @@ const api = axios.create({
   },
 });
 
+// リクエストのヘッダーにトークンを追加
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 // 全件取得
 export const getTodos = async () => {
   const res = await api.get("/todos");

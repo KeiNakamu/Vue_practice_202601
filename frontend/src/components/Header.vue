@@ -7,6 +7,8 @@
       <router-link to="/" active-class="active">Tutorial</router-link>
       |
       <router-link to="/todo" active-class="active">Todo</router-link>
+      |
+      <router-link to="/login" active-class="active">Login</router-link>
     </nav>
   </header>
 </template>
