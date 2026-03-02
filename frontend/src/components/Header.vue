@@ -1,4 +1,14 @@
 <script setup>
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth' // Pinia
+
+const router = useRouter();
+const authStore = useAuthStore();
+
+const logout = () => {
+  authStore.logout()
+  router.push('/login');
+}
 </script>
 
 <template>
@@ -8,7 +18,9 @@
       |
       <router-link to="/todo" active-class="active">Todo</router-link>
       |
-      <router-link to="/login" active-class="active">Login</router-link>
+      <router-link v-if="!authStore.isLoggedIn" to="/login" active-class="active">Login</router-link>
+
+      <a v-else type="button" @click="logout" >Logout</a>
     </nav>
   </header>
 </template>
@@ -33,10 +45,18 @@
 nav {
   display: flex;
   gap: 16px;
+  align-items: center;
 }
 
 .active {
-  font-size: bold;
+  font-weight: bold;
   color: red;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
 }
 </style>

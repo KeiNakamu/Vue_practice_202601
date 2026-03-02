@@ -15,6 +15,7 @@ const router = createRouter({
       path: '/todo',
       name: 'Todo',
       component: TodoApp,
+      meta: { requiresAuth: true },
     },
     {
       path: '/login',
@@ -22,6 +23,18 @@ const router = createRouter({
       component: LoginView,
     },
   ],
+})
+
+router.beforeEach((to, from, next) => {
+  const token = localStorage.getItem('token')
+
+  if(to.meta.requiresAuth && !token) {
+    next('/login')
+  }else if (to.path === '/login' && token){
+    next('/todo')
+  }else{
+    next()
+  }
 })
 
 export default router

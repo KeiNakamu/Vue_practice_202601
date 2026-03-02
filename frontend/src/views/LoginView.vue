@@ -15,11 +15,13 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
 
 const email = ref('')
 const password = ref('')
 const error = ref('')
 const router = useRouter()
+const authStore = useAuthStore()
 
 const login = async () => {
   try {
@@ -41,10 +43,18 @@ const login = async () => {
       return
     }
 
-    localStorage.setItem('token', data.data.token)
+    // localStorage.setItem('token', data.data.token)
+    authStore.login({
+      token: data.data.token,
+      user: data.data.user
+    })
+
+    console.log(authStore.token)
+    console.log(authStore.isLoggedIn)
 
     router.push('/todo')
   } catch (e) {
+    console.error('LOGIN ERROR: ', e)
     error.value = 'Server error'
   }
 }
