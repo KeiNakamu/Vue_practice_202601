@@ -1,6 +1,7 @@
 // PiniaのdefineStoreをインポート
 // defineStoreは「状態管理ストア」を作成するための関数
 import { defineStore } from 'pinia'
+import axios from 'axios'
 
 // useAuthStoreを定義
 // 第一引数'auth'はストアの識別ID
