@@ -1,11 +1,13 @@
 <template>
   <div>
-    <h1>Login</h1>
+    <h1>Sign Up</h1>
 
-    <form @submit.prevent="login">
+    <form @submit.prevent="signup">
+      <input v-model="name" type="text" placeholder="Name" />
       <input v-model="email" type="email" placeholder="Email" />
       <input v-model="password" type="password" placeholder="Password" />
-      <button type="submit">Login</button>
+      <input v-model="password_confirmation" type="password" placeholder="Confirm Password" />
+      <button type="submit">Register</button>
     </form>
 
     <p v-if="error">{{ error }}</p>
@@ -18,23 +20,27 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { API_BASE_URL } from '@/config/api'
 
+const name = ref('')
 const email = ref('')
 const password = ref('')
+const password_confirmation = ref('')
 const error = ref('')
 const router = useRouter()
 const authStore = useAuthStore()
 
-const login = async () => {
+const signup = async () => {
   try {
-    const res = await fetch(`${API_BASE_URL}/login`, {
+    const res = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify({
+        name: name.value,
         email: email.value,
         password: password.value,
+        password_confirmation: password_confirmation.value,
       }),
     })
 
@@ -44,18 +50,18 @@ const login = async () => {
       const fromErrors = data.errors
         ? Object.values(data.errors).flat()[0]
         : null
-      error.value = fromErrors || data.message || 'Login failed'
+      error.value = fromErrors || data.message || '登録失敗'
       return
     }
 
+    // 登録後そのままログイン状態にする
     authStore.login({
       token: data.data.token,
-      user: data.data.user,
+      user: data.data.user
     })
 
     router.push('/todo')
   } catch (e) {
-    console.error('LOGIN ERROR: ', e)
     error.value = 'Server error'
   }
 }

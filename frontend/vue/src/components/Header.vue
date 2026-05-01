@@ -20,7 +20,9 @@ const logout = () => {
       |
       <router-link v-if="!authStore.isLoggedIn" to="/login" active-class="active">Login</router-link>
 
-      <a v-else type="button" @click="logout" >Logout</a>
+      <button v-else type="button" class="logout-btn" @click="logout">Logout</button>
+      |
+      <router-link v-if="!authStore.isLoggedIn" to="/signup" active-class="active">SignUp</router-link>
     </nav>
   </header>
 </template>

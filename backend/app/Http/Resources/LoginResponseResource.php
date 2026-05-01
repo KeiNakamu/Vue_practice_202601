@@ -15,10 +15,10 @@ class LoginResponseResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'message' => 'ログイン成功',
-            'token' => $this->token,
+            'message' => data_get($this->resource, 'message', 'ログイン成功'),
+            'token' => data_get($this->resource, 'token'),
             'token_type' => 'Bearer',
-            'user' => new UserResource($this->user),
+            'user' => new UserResource(data_get($this->resource, 'user')),
         ];
     }
 }

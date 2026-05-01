@@ -1,7 +1,17 @@
 // PiniaのdefineStoreをインポート
 // defineStoreは「状態管理ストア」を作成するための関数
 import { defineStore } from 'pinia'
-import axios from 'axios'
+
+function readStoredUser() {
+  const raw = localStorage.getItem('user')
+  if (!raw) return null
+  try {
+    return JSON.parse(raw)
+  } catch {
+    localStorage.removeItem('user')
+    return null
+  }
+}
 
 // useAuthStoreを定義
 // 第一引数'auth'はストアの識別ID
@@ -11,7 +21,7 @@ export const useAuthStore = defineStore('auth', {
     // ログイン済みなら localStorage から token を取得
     token: localStorage.getItem('token') || null,
     // ログインユーザー情報を保持 初期値: null
-    user: null,
+    user: readStoredUser(),
   }),
 
   // 算出プロパティ
@@ -41,6 +51,7 @@ export const useAuthStore = defineStore('auth', {
 
       // 永続化（F5対策）
       localStorage.setItem('token', payload.token)
+      localStorage.setItem('user', JSON.stringify(payload.user))
     },
 
     // ログアウト処理
@@ -51,6 +62,7 @@ export const useAuthStore = defineStore('auth', {
 
       // localStorageからも削除
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
     },
   },
 })

@@ -6,33 +6,29 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Http\Requests\RegisterRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Resources\LoginResponseResource;
-use App\Http\Resources\UserResource;
 
 class AuthController extends Controller
 {
     public function register(RegisterRequest $request)
     {
-        Log::info('ユーザー作成開始');
-        // ユーザー作成
+        $validated = $request->validated();
+
         $user = User::create([
-            'name' => $request['name'],
-            'email' => $request['email'],
-            'password' => Hash::make($request['password']),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
         ]);
 
-        Log::info('ユーザー作成成功', ['user_id' => $user->id]);
+        $token = $user->createToken('api-token')->plainTextToken;
 
-        // トークン発行
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return new LoginResponseResource([
+        return (new LoginResponseResource([
             'token' => $token,
             'user' => $user,
-        ]);
+            'message' => 'ユーザー登録成功',
+        ]))->response()->setStatusCode(201);
     }
 
     public function login(LoginRequest $request)
@@ -47,9 +43,9 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return new LoginResponseResource((object) [
+        return new LoginResponseResource([
             'token' => $token,
             'user' => $user,
-        ]); 
+        ]);
     }
 }

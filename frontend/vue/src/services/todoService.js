@@ -1,8 +1,8 @@
 import axios from "axios";
+import { API_BASE_URL } from "@/config/api";
 
-// Laravel API のベースURL
 const api = axios.create({
-  baseURL: "http://localhost/api", // Laravel の API URL
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
